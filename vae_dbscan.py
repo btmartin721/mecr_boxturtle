@@ -89,8 +89,12 @@ def main():
 	
 	
 	if params.output_assigns:
-		print("<-s> -- Haven't implemented yet... sorry :(")
-
+		print("Making a directory for individual replicate outputs:",params.out)
+		os.mkdir(params.out)
+		prefix=params.out+"/"
+		for rep, group in dat.groupby(dat["rep"]):
+			p=prefix + "r" + str(rep) + ".txt"
+			group[["ind","pop"]].to_csv(p, sep="\t", header=False, quoting=None, index=False)
 
 def getT(dat):
 	d=dict()
@@ -292,7 +296,7 @@ class parseArgs():
 	def __init__(self):
 		#Define options
 		try:
-			options, remainder = getopt.getopt(sys.argv[1:], 'hm:s:e:i:o:pM:f:sk', \
+			options, remainder = getopt.getopt(sys.argv[1:], 'hm:s:e:i:o:pM:f:rk', \
 			["help"])
 		except getopt.GetoptError as err:
 			print(err)
@@ -343,7 +347,7 @@ class parseArgs():
 				self.min_samples=int(arg)
 			elif opt=="o":
 				self.out=arg
-			elif opt=="s":
+			elif opt=="r":
 				self.output_assigns=True
 			elif opt=="k":
 				self.matchK=True
@@ -379,7 +383,7 @@ class parseArgs():
 		-M	: Minimum samples for a DBSCAN cluster [default=1]
 		-p	: Output plots using seaborn
 		-k	: Exhaustive match-across-K (can take a long time)
-		-s	: Generate individual assignment text files per replicate
+		-r	: Generate individual assignment text files per replicate
 		-o	: Output file prefix (default=out)
 """)
 		print()
