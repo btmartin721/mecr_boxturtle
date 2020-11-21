@@ -4,6 +4,11 @@
 ###############################################
 ###############################################
 
+# Script has been modified from the original 
+# to run multiple datasets with varying missing 
+# data and minor allele frequency filters.
+# Also does a grid search for t-SNE perplexity settings.
+
 if (!require("optparse")) stop("Error: The required package optparse is not installed")
 library("optparse")
 
