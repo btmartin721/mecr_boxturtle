@@ -1,4 +1,4 @@
-This directory contains scripts modified from [shahanderkarabetian/uml_species_delim](https://github.com/shahanderkarabetian/uml_species_delim)
+This directory contains scripts modified from [shahanderkarabetian/uml_species_delim](https://github.com/shahanderkarabetian/uml_species_delim) and [sokrypton/sp_deli](https://github.com/sokrypton/sp_deli)
 
 These methods are described in [Derkarabetian et al (2019)](https://www.sciencedirect.com/science/article/pii/S1055790319301721?via%3Dihub), if you find them useful, please cite the original authors:
 
