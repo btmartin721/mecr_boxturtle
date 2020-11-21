@@ -1,13 +1,20 @@
-###############################################
-###############################################
-## script from Derkarabetian S., Castillo S., Peter K.K., Ovchinnikov S., Hedin M. "An Empirical Demonstration of Unsupervised Machine Learning in Species Delimitation"
-###############################################
-###############################################
+#########################################################################################
+#########################################################################################
+## Script from:
+## Derkarabetian S., Castillo S., Peter K.K., Ovchinnikov S., Hedin M. 
+## 2019. 
+## "An Empirical Demonstration of Unsupervised Machine Learning in Species Delimitation".
+## Molecular Phylogenetics and Evolution, 139: 106562. 
+## https://doi.org/10.1016/j.ympev.2019.106562.
+#########################################################################################
+#########################################################################################
 
-# Script has been modified from the original 
-# to run multiple datasets with varying missing 
-# data and minor allele frequency filters.
-# Also does a grid search for t-SNE perplexity settings.
+##########################################################
+## Script has been modified from the original 
+## to run multiple datasets with varying missing 
+## data and minor allele frequency filters.
+## Also does a grid search for t-SNE perplexity settings.
+##########################################################
 
 if (!require("optparse")) stop("Error: The required package optparse is not installed")
 library("optparse")
