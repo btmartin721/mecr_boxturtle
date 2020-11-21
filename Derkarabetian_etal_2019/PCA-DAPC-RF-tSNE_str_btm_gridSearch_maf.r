@@ -14,6 +14,8 @@
 ## to run multiple datasets with varying missing 
 ## data and minor allele frequency filters.
 ## Also does a grid search for t-SNE perplexity settings.
+## Finally, it is modified to perform multiple replicate runs per
+## clustering algorithm.
 ##########################################################
 
 if (!require("optparse")) stop("Error: The required package optparse is not installed")
