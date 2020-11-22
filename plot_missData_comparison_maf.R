@@ -236,6 +236,33 @@ for (i in seq(25, 100, 25)) {
       uml_list[[counter]] <- isomds_pam
       counter <- counter + 1
       
+      vae <-
+        readRDS(
+          file = paste0(
+            "missDataRuns/Robjects_maf/vae_missInd",
+            i,
+            "_Pop",
+            j,
+            "_maf",
+            maf_vals[m],
+            ".rds"
+          )
+        )
+      
+      vae <- vae[[1]]
+      
+      vae <- pad_columns(vae)
+      
+      vae$method <- "vae"
+      vae$clust <- "DBSCAN"
+      vae$perp <- NA
+      vae$ind <- i
+      vae$pop <- j
+      vae$maf <- maf_vals[m]
+      
+      uml_list[[counter]] <- vae
+      counter <- counter + 1
+      
       for (p in seq(5, 50, 5)) {
         tsne_gapstat <-
           readRDS(
@@ -386,6 +413,8 @@ hm_tsne <- subset(hm_data, hm_data$method == "tsne")
 
 clust_names <- as_labeller(c(`cmds` = "cMDS", `isomds` = "isoMDS", `tsne` = "t-SNE", `gs` = "GS", `hier` = "HC", `pam` = "PAM", `0.0` = "0%", `0.01` = "1%", `0.03` = "3%", `0.05` = "5%"))
 
+clust_names_vae <- as_labeller(c(`0.0` = "0%", `0.01` = "1%", `0.03` = "3%", `0.05` = "5%"))
+
 perp_names <- as_labeller(c(`5` = "P5", `10` = "P10", `15` = "P15", `20` = "P20", `25` = "P25", `30` = "P30", `35` = "P35", `40` = "P40", `45` = "P45", `50` = "P50", `gs` = "GS", `hier` = "HC", `pam` = "PAM", `0.0` = "0%", `0.01` = "1%", `0.03` = "3%", `0.05` = "5%"))
 
 psd.avg <-
@@ -404,8 +433,8 @@ psd.avg <-
     breaks = c("25", "", "75", "")
   ) +
   xlab("Per-individual Filtering (%)") +
-  ylab("Per-population Filtering (%)") + facet_grid(clust+factor(maf)~method, labeller = clust_names)
-ggsave("test.pdf", psd.avg, device = "pdf", height = 7, width = 7, units = "in", dpi = 300)
+  ylab("Per-population Filtering (%)") + 
+  facet_grid(clust+factor(maf)~method, labeller = clust_names)
 
 pK.avg <-
   ggplot(data = hm_data, aes(
@@ -423,7 +452,60 @@ pK.avg <-
     breaks = c("25", "", "75", "")
   ) +
   xlab("Per-individual Filtering (%)") +
-  ylab("Per-population Filtering (%)") + facet_grid(clust+factor(maf)~method, labeller = clust_names)
+  ylab("Per-population Filtering (%)") + 
+  facet_grid(clust+factor(maf)~method, labeller = clust_names)
+
+psd.avg.vae <-
+  ggplot(data = subset(hm_data, method == "vae"), 
+  aes(
+    x = factor(ind),
+    y = factor(pop),
+    fill = sd
+  )) + 
+  my_theme() + 
+  scale_fill_gradientn(
+    name = "SD",
+    limits = c(0, 4),
+    breaks = c(0, 1, 2, 3, 4),
+    colours = c("blue", "#FDFD96", "red")
+  ) +
+  scale_y_discrete(
+    labels = c("25", "50", "75", "100"),
+    breaks = c("25", "50", "75", "100")
+  ) +
+  xlab("Per-individual Filtering (%)") +
+  ylab("Per-population Filtering (%)") + 
+  facet_wrap(~factor(maf), 
+             labeller = clust_names_vae, 
+             nrow = 4, 
+             ncol = 1) +
+  coord_fixed()
+
+pK.avg.vae <-
+  ggplot(data = subset(hm_data, method == "vae"), 
+    aes(
+      x = factor(ind),
+      y = factor(pop),
+      fill = meanK
+  )) + 
+  my_theme() + 
+  scale_fill_gradientn(
+    name = "Optimal K",
+    limits = c(2, 10),
+    breaks = c(2, 4, 6, 8, 10),
+    colours = c("blue", "#FDFD96", "red")
+  ) +
+  scale_y_discrete(
+    labels = c("25", "50", "75", "100"),
+    breaks = c("25", "50", "75", "100")
+  ) +
+  xlab("Per-individual Filtering (%)") +
+  ylab("Per-population Filtering (%)") + 
+  facet_wrap(~factor(maf), 
+             labeller = clust_names_vae, 
+             nrow = 4, 
+             ncol = 1) +
+  coord_fixed()
 
 
 #####################################################
@@ -438,7 +520,7 @@ tsne.perp.avgK <-
   )) + my_theme() +
   scale_fill_gradientn(
     name = "Optimal K",
-    limits = c(2, 9),
+    limits = c(1, 9),
     breaks = c(2,4,6,8),
     colours = c("blue", "#FDFD96", "red")
   ) +
@@ -447,7 +529,8 @@ tsne.perp.avgK <-
     breaks = c("25", "", "75", "")
     ) +
   xlab("Per-individual Filtering (%)") +
-  ylab("Per-population Filtering (%)") + facet_grid(perp~clust+maf, labeller = perp_names)
+  ylab("Per-population Filtering (%)") + 
+  facet_grid(perp~clust+maf, labeller = perp_names)
 
 tsne.perp.sd <-
   ggplot(data = hm_tsne, aes(
@@ -466,17 +549,22 @@ tsne.perp.sd <-
     breaks = c("25", "", "75", "")
   ) +
   xlab("Per-individual Filtering (%)") +
-  ylab("Per-population Filtering (%)") + facet_grid(perp~clust+maf, labeller = perp_names)
+  ylab("Per-population Filtering (%)") + 
+  facet_grid(perp~clust+maf, labeller = perp_names)
 
 ggsave(filename = "missDataRuns/plots_maf_final/avgK_mean.pdf", plot = pK.avg, device = "pdf", width = 10, height = 10, units = "in", dpi = 300)
 
 ggsave(filename = "missDataRuns/plots_maf_final/avgK_sd.pdf", plot = psd.avg, device = "pdf", width = 10, height = 10, units = "in", dpi = 300)
 
-ggsave(filename = "missDataRuns/plots_maf_final/avgK_tsne_mean.pdf", plot = tsne.perp.avgK, device = "pdf", width = 11, height = 11, units = "in", dpi = 300)
+ggsave(filename = "missDataRuns/plots_maf_final2/avgK_vae_sd.pdf", plot = psd.avg.vae, device = "pdf", width = 10, height = 10, units = "in", dpi = 300)
 
-ggsave(filename = "missDataRuns/plots_maf_final/avgK_tsne_sd.pdf", plot = tsne.perp.sd, device = "pdf", width = 11, height = 11, units = "in", dpi = 300)
+ggsave(filename = "missDataRuns/plots_maf_final2/avgK_vae_mean.pdf", plot = pK.avg.vae, device = "pdf", width = 10, height = 10, units = "in", dpi = 300)
 
-##################################################
+ggsave(filename = "missDataRuns/plots_maf_final2/avgK_tsne_mean.pdf", plot = tsne.perp.avgK, device = "pdf", width = 11, height = 11, units = "in", dpi = 300)
+
+ggsave(filename = "missDataRuns/plots_maf_final2/avgK_tsne_sd.pdf", plot = tsne.perp.sd, device = "pdf", width = 11, height = 11, units = "in", dpi = 300)
+
+###################################################
 ## Line plots
 ###################################################
 
