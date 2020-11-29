@@ -1,17 +1,30 @@
-
-# Plot iqtree phylogeny with divergence times.
-# For Terrapene
+##################################################################
+## Script by Bradley T. Martin
+##
+## Plot Terrapene iqtree phylogeny with divergence times alongside 
+## UML barplots
+## 
+## Individuals on the barplots are aligned with the phylogeny tips
+##################################################################
 
 library("ggplot2")
 library("ggtree")
 library("treeio")
-library("gridExtra")
 library("ape")
 library("RColorBrewer")
-library("aplot")
 library("reshape2")
+library("grid")
 
 sum_plots <- function(propsdf, sample.ids, pops, title, subtitle){
+  # Function to plot UML results as a barplot.
+  # propsdf: data.frame with assignment proportions.
+  # sample.ids: Two-column tab-separated file with 
+    # sampleIDs as column 1 and plotting order as column 2.
+  # pops: Two-column tab-separated file with 
+    # population map file with sampleIDs as column 1
+    # and population ID as column 2.
+  # title: Title of barplot (i.e. dimension reduction algorithm).
+  # subtitle: Subtitle of barplot (i.e. clustering algorithm).
   
   # Join sample ids to get order that I want.
   joined_tmp <- merge(propsdf, 
@@ -36,411 +49,31 @@ sum_plots <- function(propsdf, sample.ids, pops, title, subtitle){
   return(mymelt)
 }
 
-sample.ids <- read.table(file = "popmaps/sampleids_numbered.txt", header = F)
-
-dir.create("missDataRuns/plots_maf_final", showWarnings = FALSE)
-
-# Make color vector
-colors <- brewer.pal(n = 9, name = "Set1")
-
-popmap <-
-  read.table(
-    file = "popmaps/phylogen.popmap.final.txt",
-    header = FALSE,
-    col.names = c("Sample", "Pop")
-  )
-
-cmds_gapstat <-
-  readRDS(
-    file = paste0(
-      "missDataRuns/Robjects_maf/cmds_gapstat_missInd",
-      50,
-      "_Pop",
-      50,
-      "_maf",
-      0.03,
-      ".rds"
-    )
-  )
-cmds_hier <-
-  readRDS(
-    file = paste0(
-      "missDataRuns/Robjects_maf/cmds_hier_missInd",
-      50,
-      "_Pop",
-      50,
-      "_maf",
-      0.03,
-      ".rds"
-    )
-  )
-cmds_pam <-
-  readRDS(
-    file = paste0(
-      "missDataRuns/Robjects_maf/cmds_pam_missInd",
-      50,
-      "_Pop",
-      50,
-      "_maf",
-      0.03,
-      ".rds"
-    )
-  )
-cmds_pam_prox <-
-  readRDS(
-    file = paste0(
-      "missDataRuns/Robjects_maf/cmds_pam_prox_missInd",
-      50,
-      "_Pop",
-      50,
-      "_maf",
-      0.03,
-      ".rds"
-    )
-  )
-isomds_gapstat <-
-  readRDS(
-    file = paste0(
-      "missDataRuns/Robjects_maf/isomds_gapstat_missInd",
-      50,
-      "_Pop",
-      50,
-      "_maf",
-      0.03,
-      ".rds"
-    )
-  )
-isomds_hier <-
-  readRDS(
-    file = paste0(
-      "missDataRuns/Robjects_maf/isomds_hier_missInd",
-      50,
-      "_Pop",
-      50,
-      "_maf",
-      0.03,
-      ".rds"
-    )
-  )
-isomds_pam <-
-  readRDS(
-    file = paste0(
-      "missDataRuns/Robjects_maf/isomds_pam_missInd",
-      50,
-      "_Pop",
-      50,
-      "_maf",
-      0.03,
-      ".rds"
-    )
-  )
-
-
-#*********************************************************
-### D) Set function values here
-#*********************************************************
-cmds.gapstat.prefix <-
-  paste0("cmds_gapstat_missInd", 50, "_Pop", 50, "_maf", 0.03)
-cmds.gapstat.title <-
-  paste0("cMDS Gap Statistic missInd ", 50, " Pop ", 50, "_maf", 0.03)
-
-# cMDS Hierarchical Clustering
-cmds.hier.prefix <-
-  paste0("cmds_hierarchical_missInd", 50, "_Pop", 50, "_maf", 0.03)
-cmds.hier.title <-
-  paste0("cMDS Hierarchical Clustering missInd ",
-         50,
-         " Pop ",
-         50,
-         "_maf",
-         0.03)
-
-# cMDS PAM Clustering (cMDS Groups)
-cmds.pam.cmdsgroups.prefix <-
-  paste0("cmds_pam_missInd", 50, "_Pop", 50, "_maf", 0.03)
-cmds.pam.cmdsgroups.title <-
-  paste0("cMDS PAM Clustering (cMDS Groups) missInd ",
-         50,
-         " Pop ",
-         50,
-         "_maf",
-         0.03)
-
-# cMDS PAM Clustering (Proximity Scores)
-cmds.pam.prox.prefix <-
-  paste0("cmds_pam_prox_missInd", 50, "_Pop", 50, "_maf", 0.03)
-cmds.pam.prox.title <-
-  paste0("cMDS PAM Clustering (Proximity Scores) missInd ",
-         50,
-         " Pop ",
-         50,
-         "_maf",
-         0.03)
-
-# isoMDS Gap Statistic (PAM Clustering)
-isomds.gapstat.prefix <-
-  paste0("isomds_gapstat_missInd", 50, "_Pop", 50, "_maf", 0.03)
-isomds.gapstat.title <-
-  paste0("isoMDS Gap Statistic missInd ", 50, " Pop ", 50, "_maf", 0.03)
-
-# isoMDS Hierarchical Clustering
-isomds.hier.prefix <-
-  paste0("isomds_hierarchical_missInd", 50, "_Pop", 50, "_maf", 0.03)
-isomds.hier.title <-
-  paste0("isoMDS Hierarchical Clustering missInd ",
-         50,
-         " Pop ",
-         50,
-         "_maf",
-         0.03)
-
-# isoMDS PAM Clustering
-isomds.pam.prefix <-
-  paste0("isomds_pam_missInd", 50, "_Pop", 50, "_maf", 0.03)
-isomds.pam.title <-
-  paste0("isoMDS PAM Clustering missInd ", 50, " Pop ", 50, "_maf", 0.03)
-
-# Make all the plots
-cmds.gapstat.df <-
-  makeplots(cmds_gapstat[[1]],
-            cmds.gapstat.prefix,
-            cmds.gapstat.title,
-            sample.ids)
-
-cmds.hier.df <-
-  makeplots(cmds_hier[[1]],
-            cmds.hier.prefix,
-            cmds.hier.title,
-            sample.ids)
-
-cmds.pam.cmdsgroups.df <-
-  makeplots(
-    cmds_pam[[1]],
-    cmds.pam.cmdsgroups.prefix,
-    cmds.pam.cmdsgroups.title,
-    sample.ids
-  )
-
-cmds.pam.prox.df <-
-  makeplots(cmds_pam_prox[[1]],
-            cmds.pam.prox.prefix,
-            cmds.pam.prox.title,
-            sample.ids)
-
-isomds.gapstat.df <-
-  makeplots(isomds_gapstat[[1]],
-            isomds.gapstat.prefix,
-            isomds.gapstat.title,
-            sample.ids)
-
-isomds.hier.df <-
-  makeplots(isomds_hier[[1]],
-            isomds.hier.prefix,
-            isomds.hier.title,
-            sample.ids)
-
-isomds.pam.df <-
-  makeplots(isomds_pam[[1]],
-            isomds.pam.prefix,
-            isomds.pam.title,
-            sample.ids)
-
-p1 <-
-  sum_plots(cmds_gapstat[[2]], sample.ids, popmap, "cMDS", "GS")
-
-p2 <-
-  sum_plots(cmds_hier[[2]], sample.ids, popmap, "cMDS", "H")
-
-p3 <-
-  sum_plots(cmds_pam[[2]], sample.ids, popmap, "cMDS", "PAM")
-
-p4 <-
-  sum_plots(cmds_pam_prox[[2]],
-            sample.ids,
-            popmap,
-            "Prox",
-            "PAM")
-
-p5 <-
-  sum_plots(isomds_gapstat[[2]],
-            sample.ids,
-            popmap,
-            "isoMDS",
-            "GS")
-
-p6 <-
-  sum_plots(isomds_hier[[2]],
-            sample.ids,
-            popmap,
-            "isoMDS",
-            "H")
-p7 <-
-  sum_plots(isomds_pam[[2]],
-            sample.ids,
-            popmap,
-            "isoMDS",
-            "PAM")
-
-writeLines(paste0("Doing t-SNE perplexity ", 15, "...\n"))
-tsne_gapstat <-
-  readRDS(
-    file = paste0(
-      "missDataRuns/Robjects_maf/tsne_gapstat_missInd",
-      50,
-      "_Pop",
-      50,
-      "_maf",
-      0.03,
-      "_P",
-      15,
-      ".rds"
-    )
-  )
-tsne_hier <-
-  readRDS(
-    file = paste0(
-      "missDataRuns/Robjects_maf/tsne_hier_missInd",
-      50,
-      "_Pop",
-      50,
-      "_maf",
-      0.03,
-      "_P",
-      15,
-      ".rds"
-    )
-  )
-tsne_pam <-
-  readRDS(
-    file = paste0(
-      "missDataRuns/Robjects_maf/tsne_pam_missInd",
-      50,
-      "_Pop",
-      50,
-      "_maf",
-      0.03,
-      "_P",
-      15,
-      ".rds"
-    )
-  )
-
-# tsne perplexity = 5 Gap Statistic
-tsnep5.gapstat.prefix <-
-  paste0("tsneP50_gapstat_missInd",
-         50,
-         "_Pop",
-         50,
-         "_maf",
-         0.03,
-         "_P",
-         15)
-tsnep5.gapstat.title <-
-  paste0("t-SNE Gap Statistic missInd ",
-         50,
-         " Pop",
-         50,
-         "_maf",
-         0.03,
-         "(Perplexity = ",
-         15,
-         ")")
-
-# tsne perplexity = 5 Hierarchical Clustering
-tsnep5.hier.prefix <-
-  paste0("tsneP50_hierarchical_missInd",
-         50,
-         "_Pop",
-         50,
-         "_maf",
-         0.03,
-         "_P",
-         15)
-
-tsnep5.hier.title <-
-  paste0(
-    "t-SNE Hierarchical Clustering missInd ",
-    50,
-    " Pop",
-    50,
-    "_maf",
-    0.03,
-    "(Perplexity = ",
-    15,
-    ")"
-  )
-
-# tsne perplexity = 5 PAM Clustering
-tsnep5.pam.prefix <-
-  paste0("tsneP50_pam_missInd", 50, "_Pop", 50, "_maf", 0.03)
-
-tsnep5.pam.title <-
-  paste0("t-SNE PAM Clustering missInd ",
-         50,
-         " Pop",
-         50,
-         "_maf",
-         0.03,
-         "(Perplexity = ",
-         15,
-         ")")
-
-
-#*********************************************************
-
-##########################################################
-### E) Run the functions for each uml method
-##########################################################
-
-tsnep50.gapstat.df <-
-  makeplots(tsne_gapstat[[1]],
-            tsnep5.gapstat.prefix,
-            tsnep5.gapstat.title,
-            sample.ids)
-
-tsnep50.hier.df <-
-  makeplots(tsne_hier[[1]],
-            tsnep5.hier.prefix,
-            tsnep5.hier.title,
-            sample.ids)
-
-tsnep50.pam.df <-
-  makeplots(tsne_pam[[1]],
-            tsnep5.pam.prefix,
-            tsnep5.pam.title,
-            sample.ids)
-
-###########################################################
-### F) Summarize Runs (Rows)
-###########################################################
-
-p8 <-
-  sum_plots(tsne_gapstat[[2]],
-            sample.ids,
-            popmap,
-            paste0("t-SNE P", 15),
-            "GS")
-
-p9 <-
-  sum_plots(tsne_hier[[2]],
-            sample.ids,
-            popmap,
-            paste0("t-SNE P", 15),
-            "H")
-
-p10 <-
-  sum_plots(tsne_pam[[2]],
-            sample.ids,
-            popmap,
-            paste0("t-SNE P", 15),
-            "PAM")
-
-plot_tree <- function(p, clades=NULL, OUT=NULL, DS=NULL, ON=NULL, FL=NULL, MX=NULL, TT=NULL, EA=NULL, GUFL=NULL, GUMS_CH=NULL, ONDS=NULL, terrapene=NULL, east=NULL) {
+plot_tree <-
+  function(p,
+           clades = FALSE,
+           OUT = NULL,
+           DS = NULL,
+           ON = NULL,
+           FL = NULL,
+           MX = NULL,
+           TT = NULL,
+           EA = NULL,
+           GUFL = NULL,
+           GUMS_CH = NULL,
+           ONDS = NULL,
+           terrapene = NULL,
+           east = NULL) {
+    # Function to plot a time-calibrated Terrapene phylogeny.
+    # p: ggtree object.
+    # clades: Logical indicating whether the below arguments are specified.
+    # Remaining argument: Specific clades I want labelled. Only plotted
+      # if clades == TRUE.
   
   p <- revts(p)
   
-  if (is.null(clades)) {
-
+  if (!clades) {
+    
     p.final <- p +
       # outgroup
       geom_cladelabel(
@@ -538,7 +171,8 @@ plot_tree <- function(p, clades=NULL, OUT=NULL, DS=NULL, ON=NULL, FL=NULL, MX=NU
           subset = as.numeric(sub("/.*", "",
                                   label)) >= 95 &
             !as.numeric(sub(".*/", "",
-                            label)) >= 50 & node != east
+                            label)) >= 50 & 
+            node != east
         ),
         fill = "dodgerblue2",
         size = 2,
@@ -700,7 +334,10 @@ plot_tree <- function(p, clades=NULL, OUT=NULL, DS=NULL, ON=NULL, FL=NULL, MX=NU
           subset = as.numeric(sub("/.*", "",
                                   label)) >= 95 &
             !as.numeric(sub(".*/", "",
-                            label)) >= 50 & node != east & node != terrapene & node != ONDS
+                            label)) >= 50 & 
+            node != east & 
+            node != terrapene & 
+            node != ONDS
         ),
         fill = "dodgerblue2",
         size = 2,
@@ -714,7 +351,10 @@ plot_tree <- function(p, clades=NULL, OUT=NULL, DS=NULL, ON=NULL, FL=NULL, MX=NU
           subset = !as.numeric(sub("/.*", "",
                                    label)) >= 95 &
             as.numeric(sub(".*/", "",
-                           label)) >= 50 & node != east & node != terrapene & node != ONDS
+                           label)) >= 50 & 
+            node != east & 
+            node != terrapene & 
+            node != ONDS
         ),
         fill = "firebrick",
         size = 2,
@@ -728,7 +368,10 @@ plot_tree <- function(p, clades=NULL, OUT=NULL, DS=NULL, ON=NULL, FL=NULL, MX=NU
           subset = as.numeric(sub("/.*", "",
                                   label)) >= 95 &
             as.numeric(sub(".*/", "",
-                           label)) >= 50 & node != east & node != terrapene & node != ONDS
+                           label)) >= 50 & 
+            node != east & 
+            node != terrapene & 
+            node != ONDS
         ),
         fill = "darkorchid",
         size = 2,
@@ -762,7 +405,7 @@ plot_tree <- function(p, clades=NULL, OUT=NULL, DS=NULL, ON=NULL, FL=NULL, MX=NU
         shape = 22,
         na.rm = TRUE
       ) +
-    
+      
       geom_rootpoint(fill="black", size=2, shape=22, na.rm=TRUE)
     
   }
@@ -770,85 +413,451 @@ plot_tree <- function(p, clades=NULL, OUT=NULL, DS=NULL, ON=NULL, FL=NULL, MX=NU
   return(p.final)
 }
 
+# Read sampleIDs from file.
+# Two columns: sampleID\tPlotting order
+sample.ids <- read.table(file = "popmaps/sampleids_numbered.txt", 
+                         header = F)
+
+# Create output directory if it doesn't already exist.
+dir.create("missDataRuns/plots_maf_final", 
+           showWarnings = FALSE)
+
+# Make color vector
+colors <- brewer.pal(n = 9, 
+                     name = "Set1")
+
+popmap <-
+  read.table(
+    file = "popmaps/phylogen.popmap.final.txt",
+    header = FALSE,
+    col.names = c("Sample", "Pop")
+  )
+
+RobjectDIR <- "missDataRuns/Robjects_best_maf"
+
+cmds_gapstat <-
+  readRDS(
+    file = paste0(
+      RobjectDIR, 
+      "/cmds_gapstat_missInd",
+      25,
+      "_Pop",
+      25,
+      "_maf",
+      0.05,
+      ".rds"
+    )
+  )
+cmds_hier <-
+  readRDS(
+    file = paste0(
+      RobjectDIR, 
+      "/cmds_hier_missInd",
+      25,
+      "_Pop",
+      25,
+      "_maf",
+      0.05,
+      ".rds"
+    )
+  )
+cmds_pam <-
+  readRDS(
+    file = paste0(
+      RobjectDIR, 
+      "/cmds_pam_missInd",
+      25,
+      "_Pop",
+      25,
+      "_maf",
+      0.05,
+      ".rds"
+    )
+  )
+isomds_gapstat <-
+  readRDS(
+    file = paste0(
+      RobjectDIR, 
+      "/isomds_gapstat_missInd",
+      25,
+      "_Pop",
+      25,
+      "_maf",
+      0.01,
+      ".rds"
+    )
+  )
+isomds_hier <-
+  readRDS(
+    file = paste0(
+      RobjectDIR, 
+      "/isomds_hier_missInd",
+      25,
+      "_Pop",
+      25,
+      "_maf",
+      0.01,
+      ".rds"
+    )
+  )
+isomds_pam <-
+  readRDS(
+    file = paste0(
+      RobjectDIR, 
+      "/isomds_pam_missInd",
+      25,
+      "_Pop",
+      25,
+      "_maf",
+      0.01,
+      ".rds"
+    )
+  )
+tsne_gapstat <-
+  readRDS(
+    file = paste0(
+      RobjectDIR, 
+      "/tsne_gapstat_missInd",
+      25,
+      "_Pop",
+      25,
+      "_maf",
+      0.05,
+      "_P",
+      15,
+      ".rds"
+    )
+  )
+tsne_hier <-
+  readRDS(
+    file = paste0(
+      RobjectDIR, 
+      "/tsne_hier_missInd",
+      25,
+      "_Pop",
+      25,
+      "_maf",
+      0.05,
+      "_P",
+      15,
+      ".rds"
+    )
+  )
+tsne_pam <-
+  readRDS(
+    file = paste0(
+      RobjectDIR, 
+      "/tsne_pam_missInd",
+      25,
+      "_Pop",
+      25,
+      "_maf",
+      0.05,
+      "_P",
+      15,
+      ".rds"
+    )
+  )
+vae <-
+  readRDS(
+    file = paste0(
+      RobjectDIR, 
+      "/vae_missInd",
+      25,
+      "_Pop",
+      25,
+      "_maf",
+      0.05,
+      ".rds"
+    )
+  )
+
+##################################################
+## Summarize UML into a barplot
+## X-axis = assignment proportion
+## Y-axis = samples
+##################################################
+
+p1 <-
+  sum_plots(cmds_gapstat[[2]], sample.ids, popmap, "cMDS", "GS")
+
+p2 <-
+  sum_plots(cmds_hier[[2]], sample.ids, popmap, "cMDS", "H")
+
+p3 <-
+  sum_plots(cmds_pam[[2]], sample.ids, popmap, "cMDS", "PAM")
+
+p4 <-
+  sum_plots(isomds_gapstat[[2]],
+            sample.ids,
+            popmap,
+            "isoMDS",
+            "GS")
+
+p5 <-
+  sum_plots(isomds_hier[[2]],
+            sample.ids,
+            popmap,
+            "isoMDS",
+            "H")
+p6 <-
+  sum_plots(isomds_pam[[2]],
+            sample.ids,
+            popmap,
+            "isoMDS",
+            "PAM")
+
+p7 <-
+  sum_plots(tsne_gapstat[[2]],
+            sample.ids,
+            popmap,
+            paste0("t-SNE P", 15),
+            "GS")
+
+p8 <-
+  sum_plots(tsne_hier[[2]],
+            sample.ids,
+            popmap,
+            paste0("t-SNE P", 15),
+            "H")
+
+p9 <-
+  sum_plots(tsne_pam[[2]],
+            sample.ids,
+            popmap,
+            paste0("t-SNE P", 15),
+            "PAM")
+
+p10 <-
+  sum_plots(vae[[2]],
+            sample.ids,
+            popmap,
+            "VAE",
+            "DBSCAN")
+
+###############################################
+## Make the tree using ggtree.
+###############################################
+
 tfile <- 
-  file.path("output_dating_part_iqtree",
+  file.path("missDataRuns", "output_dating_part_iqtree",
             "box_dating_full.timetree.nex")
 
-mytree <- read.beast(file = tfile)
+# Read IQ-TREE time-calibrated tree file.
+mytree <- treeio::read.beast(file = tfile)
 
+# Make ggtree object from tree..
 p.gg <-
-  ggtree(mytree, right = TRUE) + 
+  ggtree::ggtree(mytree, right = TRUE) + 
   theme_tree2() + 
   scale_x_continuous(labels = abs) + 
   geom_rootedge(0.4)
 
+# Plot the tree.
 p.final <- plot_tree(p.gg)
 
+# Get data from ggtree object.
 df.t <- p.final$data
 
+# Drop samples not used in UML analyses.
 samples2drop <- subset(p1, is.na(value))
 samples2drop <- as.character(unique(samples2drop$Sample))
-samples2drop <- append(samples2drop, c("TCAL_BXTC111_U52", "GUFL_BXGU38_502", "YUYU_BX1183", "SSMX_BX1620_x2", "TCAL_BX329"))
+samples2drop <- append(samples2drop, c("TCAL_BXTC111_U52", 
+                                       "GUFL_BXGU38_502", 
+                                       "YUYU_BX1183", 
+                                       "SSMX_BX1620_x2", 
+                                       "TCAL_BX329"))
 
-mytree2 <- drop.tip(as.phylo(mytree), samples2drop, subtree = FALSE, trim.internal = TRUE)
+# drop tips from tree.
+mytree2 <- ape::drop.tip(as.phylo(mytree), 
+                    samples2drop, 
+                    subtree = FALSE, 
+                    trim.internal = TRUE)
 
+# Re-make ggtree object from tree with dropped tips.
+# Did this again because using drop.tip removes the data
+# from the tree object. E.g., divergence times get removed.
+# So I made an initial ggtree object, saved the data from it,
+# dropped the tips, made a new ggtree object, then re-added the data.
 p.gg <-
-  ggtree(mytree2, right = TRUE)
+  ggtree::ggtree(mytree2, right = TRUE)
 
+# Re-add the data to the ggtree object.
 p.gg <- p.gg %<+% df.t +
   theme_tree2() + 
   scale_x_continuous(labels = abs) + 
   geom_rootedge(0.4)
 
-p.final <- plot_tree(p.gg)
-
-OUT <- getMRCA(mytree2, grep("OGCG|KPFP", p.final$data$label))
-DS <- getMRCA(mytree2, grep("DS", p.final$data$label))
-ON <- getMRCA(mytree2, grep("ON", p.final$data$label))
-FL <- getMRCA(mytree2, grep("FLFL", p.final$data$label))
-MX <- getMRCA(mytree2, grep("MXMX", p.final$data$label))
-TT <- getMRCA(mytree2, grep("TT", p.final$data$label))
-EA <- getMRCA(mytree2, grep("EA", p.final$data$label))
+# Get most recent common ancestors for specific clades.
+OUT <- ape::getMRCA(mytree2, grep("OGCG|KPFP", p.gg$data$label))
+DS <- ape::getMRCA(mytree2, grep("DS", p.gg$data$label))
+ON <- ape::getMRCA(mytree2, grep("ON", p.gg$data$label))
+FL <- ape::getMRCA(mytree2, grep("FLFL", p.gg$data$label))
+MX <- ape::getMRCA(mytree2, grep("MXMX", p.gg$data$label))
+TT <- ape::getMRCA(mytree2, grep("TT", p.gg$data$label))
+EA <- ape::getMRCA(mytree2, grep("EA", p.gg$data$label))
 GUFL <-
-  getMRCA(
+  ape::getMRCA(
     mytree2,
     grep(
-      "GUFL_BXGU27|GUFL_BXGU65_AA39|GUFL_BX504|GUFL_BX503|GUFL_BX684|GUFL_BXGU32|GUFL_BX626|GUFL_BX627",
-      p.final$data$label
+      "GUFL_BX626|GUFL_BXGU35_AA13|GUFL_BXGU33|GUFL_BXGU36_AA14|GUFL_BX503|GUFL_BX684|GUFL_BXGU63_AA37|GUFL_BX504| GUFL_BXGU61_U57|GUFL_BXGU62_AA36|GUFL_BXGU32|GUFL_BXGU65_AA39|GUFL_BX685",
+      p.gg$data$label
     )
   )
+GUMS_CH <- ape::getMRCA(mytree2, grep("GUMS|CH", p.gg$data$label))
 
-GUMS_CH <- getMRCA(mytree2, grep("GUMS|CH", p.final$data$label))
+# Fossil calibration nodes.
+ONDS <- ape::getMRCA(mytree2, grep("ON|DS", p.gg$data$label))
+east <- ape::getMRCA(mytree2, grep("EANC|FLFL|TTTX|MXMX|GUFL|CHCH|GUMS", 
+                                   p.gg$data$label))
+terrapene <- ape::getMRCA(mytree2, grep("EANC|TTTX|MXMX|FLFL|CHCH|GUFL|GUMS|ONTX|DSNM|", 
+                                        p.gg$data$label))
 
-ONDS <- getMRCA(mytree2, grep("ON|DS", p.final$data$label))
-east <- getMRCA(mytree2, c("EANC_BX316", "FLFL_BX683"))
-terrapene <- getMRCA(mytree2, c("EANC_BX316", "ONTX_BX765"))
+# Plot the tree with again with the labelled clades.
+p.final <- plot_tree(p.gg, 
+                     clades=TRUE, 
+                     OUT, 
+                     DS, 
+                     ON, 
+                     FL, 
+                     MX, 
+                     TT, 
+                     EA, 
+                     GUFL, 
+                     GUMS_CH, 
+                     ONDS=ONDS, 
+                     east=east, 
+                     terrapene=terrapene)
 
-p.final <- plot_tree(p.gg, clades="use", OUT, DS, ON, FL, MX, TT, EA, GUFL, GUMS_CH, ONDS=ONDS, east=east, terrapene=terrapene)
+##############################################
+## Plot tree alongside barplots.
+##############################################
 
-pa <- facet_plot(p = p.final, panel = "cMDS (GS)", data = p1, geom = ggstance::geom_barh, mapping = aes(x = value, fill = variable), stat = "identity", width = 1) + scale_fill_brewer(palette = "Set1")
+pa <-
+  ggtree::facet_plot(
+    p = p.final,
+    panel = "cMDS (GS)",
+    data = p1,
+    geom = ggstance::geom_barh,
+    mapping = aes(x = value, fill = variable),
+    stat = "identity",
+    width = 1
+  ) + 
+  scale_fill_brewer(palette = "Set1")
 
-pb <- facet_plot(p = pa, panel = "cMDS (H)", data = p2, geom=ggstance::geom_barh, mapping = aes(x = value, fill = variable), stat = "identity", width = 1)
+pb <-
+  ggtree::facet_plot(
+    p = pa,
+    panel = "cMDS (H)",
+    data = p2,
+    geom = ggstance::geom_barh,
+    mapping = aes(x = value, fill = variable),
+    stat = "identity",
+    width = 1
+  )
 
-pc <- facet_plot(p = pb, panel = "cMDS (PAM)", data = p3, geom=ggstance::geom_barh, mapping = aes(x = value, fill = variable), stat = "identity", width = 1)
+pc <-
+  ggtree::facet_plot(
+    p = pb,
+    panel = "cMDS (PAM)",
+    data = p3,
+    geom = ggstance::geom_barh,
+    mapping = aes(x = value, fill = variable),
+    stat = "identity",
+    width = 1
+  )
 
-pd <- facet_plot(p = pc, panel = "cMDS (PAM Prox)", data = p4, geom=ggstance::geom_barh, mapping = aes(x = value, fill = variable), stat = "identity", width = 1)
+pd <-
+  ggtree::facet_plot(
+    p = pc,
+    panel = "isoMDS (GS)",
+    data = p4,
+    geom = ggstance::geom_barh,
+    mapping = aes(x = value, fill = variable),
+    stat = "identity",
+    width = 1
+  )
 
-pe <- facet_plot(p = pd, panel = "isoMDS (GS)", data = p5, geom=ggstance::geom_barh, mapping = aes(x = value, fill = variable), stat = "identity", width = 1)
+pe <-
+  ggtree::facet_plot(
+    p = pd,
+    panel = "isoMDS (H)",
+    data = p5,
+    geom = ggstance::geom_barh,
+    mapping = aes(x = value, fill = variable),
+    stat = "identity",
+    width = 1
+  )
 
-pf <- facet_plot(p = pe, panel = "isoMDS (H)", data = p6, geom=ggstance::geom_barh, mapping = aes(x = value, fill = variable), stat = "identity", width = 1)
+pf <-
+  ggtree::facet_plot(
+    p = pe,
+    panel = "isoMDS (PAM)",
+    data = p6,
+    geom = ggstance::geom_barh,
+    mapping = aes(x = value, fill = variable),
+    stat = "identity",
+    width = 1
+  )
 
-pg <- facet_plot(p = pf, panel = "isoMDS (PAM)", data = p7, geom=ggstance::geom_barh, mapping = aes(x = value, fill = variable), stat = "identity", width = 1)
+pg <-
+  ggtree::facet_plot(
+    p = pf,
+    panel = "t-SNE P15 (GS)",
+    data = p7,
+    geom = ggstance::geom_barh,
+    mapping = aes(x = value, fill = variable),
+    stat = "identity",
+    width = 1
+  )
 
-ph <- facet_plot(p = pg, panel = "t-SNE P15 (GS)", data = p8, geom=ggstance::geom_barh, mapping = aes(x = value, fill = variable), stat = "identity", width = 1)
+ph <-
+  ggtree::facet_plot(
+    p = pg,
+    panel = "t-SNE P15 (H)",
+    data = p8,
+    geom = ggstance::geom_barh,
+    mapping = aes(x = value, fill = variable),
+    stat = "identity",
+    width = 1
+  )
 
-pi <- facet_plot(p = ph, panel = "t-SNE P15 (H)", data = p9, geom=ggstance::geom_barh, mapping = aes(x = value, fill = variable), stat = "identity", width = 1)
+pi <-
+  ggtree::facet_plot(
+    p = ph,
+    panel = "t-SNE P15 (PAM)",
+    data = p9,
+    geom = ggstance::geom_barh,
+    mapping = aes(x = value, fill = variable),
+    stat = "identity",
+    width = 1
+  )
 
-pj <- facet_plot(p = pi, panel = "t-SNE P15 (PAM)", data = p10, geom=ggstance::geom_barh, mapping = aes(x = value, fill = variable), stat = "identity", width = 1) + theme(legend.position = "none")
+pj <-
+  ggtree::facet_plot(
+    p = pi,
+    panel = "VAE (DBSCAN)",
+    data = p10,
+    geom = ggstance::geom_barh,
+    mapping = aes(x = value, fill = variable),
+    stat = "identity",
+    width = 1
+  ) + 
+  theme(legend.position = "none")
 
+# Change tree panel width (makes it 3 times larger).
 gt <- ggplot_gtable(ggplot_build(pj))
 gt$layout$l[grep('panel-1', gt$layout$name)]
 gt$widths[5] = 3*gt$widths[5]
 grid::grid.draw(gt)
 
-ggsave(filename = "missInd50_Pop50_maf0.03.pdf", plot = gt, device="pdf", width=16, height = 9, units = "in", dpi=300)
+# Save the final plot.
+ggtree::ggsave(filename = file.path("missDataRuns",
+                                    "plots_maf_final2_best",
+                                    "missInd25_Pop25_best_withTree.pdf"), 
+       plot = gt, 
+       device="pdf", 
+       width=16, 
+       height = 9, 
+       units = "in", 
+       dpi=300)
