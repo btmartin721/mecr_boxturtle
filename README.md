@@ -18,7 +18,7 @@ ind3  pop2
 ind4  pop2
 ```  
 
-See example_files/popmap.txt
+See *example_files/popmap.txt*
 
 If you want to change the filtering parameters, you'll need to change the values in the filter_maf.sh script. Just change what's in the ```plist``` variables.  
 
@@ -43,7 +43,7 @@ Other minor modifications in the VAE script:
 
 ### cMDS, isoMDS, t-SNE
 
-To use the modified R script, supply a commands.txt file. See example_files/commands.txt  
+To use the modified R script, supply a commands.txt file. See *example_files/commands_R.txt*  
 
 The commands.txt file should have one line per replicate.  
 You can supply dummy values if you are using multiple filtering parameters, and replace the dummy variables using sed when you run the analysis.  
@@ -96,21 +96,28 @@ Once all the output is moved, use the *parsing_output/bash/clean_uml_output.sh* 
 
 ### VAE
 
-3. Run *parsing_output/bash/add_sampleids.sh*
+3. Run *parsing_output/python/vae_dbscan.py* to do an automated clustering of the VAE latent variables.  
+
+It uses DBSCAN to do the clustering.
+The standard deviation (SD) latent variable is averaged across all replicates, and DBSCAN clusters with an epsilon (eps) of 2 X SD.  
+
+4. Run *parsing_output/bash/add_sampleids.sh*
 
 Use the add_sampleids.sh script to switch the first column in each replicate with sampleIDs.  
 This makes for easier plotting later.  
 
 ## Parsing UML Output
 
-4. Run the *parsing_output/aligningK/UML_alignK_missDataRuns_maf.R* script to align K across replicates. 
+5. Run the *parsing_output/aligningK/UML_alignK_missDataRuns_maf.R* script to align K across replicates. 
 
 First, you need to align K across replicates. We implemented the CLUMPAK algorithm (Kopelman et al. 2015) using the PopHelper R package (Francis 2017).
 
-To use this script, replicates for a single algorithm should be in their own directory, with nothing else in it.  
+To use this script, replicates for a single algorithm should be in its own directory, **with nothing else in it**.  E.g. if you did 100 cMDS gapstat replicates, there should be 100 files in the *cmds/gapstat* directory.  
 
-The script loads the replicates into a single data.frame, aligns K for that clustering algorithm, 
-and saves RDS objects for each algorithm so they can be loaded in downstream R scripts.  
+The script loads the replicates into a single data.frame, aligns K for each clustering algorithm, 
+and saves RDS objects for each algorithm so they can be loaded in downstream R scripts. 
+
+The .rds objects are lists of data.frames, with the first data.frame being the K-aligned replicates as columns and the second beign assignment proportions.  
 
 Francis, R. M. (2017). pophelper: an R package and web app to analyse and visualize population structure. Molecular ecology resources, 17(1), 27-32.
 
@@ -119,22 +126,22 @@ Kopelman, N. M., Mayzel, J., Jakobsson, M., Rosenberg, N. A., & Mayrose, I. (201
 
 ## Plotting UML Output
 
-5. Run *plotting/plot_missData_stats.R* to plot summary statistics.  
+6. Run *plotting/plot_missData_stats.R* to plot summary statistics.  
 
 Once you have the .rds objects, you can make summary statistic plots. The script makes heatmaps, Tukey-style boxplots, and regression plots.  
 You will have to tweak the code in this one. It isn't full automated. 
 
-6. Run *plotting/plotUML_missData_maf.R* to make structure-style barplots
+7. Run *plotting/plotUML_missData_maf.R* to make structure-style barplots
 
 Here, you can make structure-style barplots with assignment proportions among the UML replicates.
 It saves one barplot per clustering algorithm and puts them all in one PDF file. 
 If you ran multiple filtering parameters you can run them all in the for loop.  
 
-7. Run *plotting/plotDatedTree.R* to add a phylogeny to the structure-style barplots. 
+8. Run *plotting/plotDatedTree.R* to add a phylogeny to the structure-style barplots. 
 
 This uses ggtree to add a phylogeny to a page of structure-style barplots. The individuals from the barplots and phylogeny will be aligned.
 It makes for easier interpretation. 
-You'll have to tweak the code, as we don't have it automated.  
+You'll have to tweak the code, as we don't have it automated. Currently, it is tailored to our specific dataset and aesthetic choices.  
 
 It's also set up to read a nexus file output from LSD2 divergence dating, as implemented in IQ-TREE.   
 
