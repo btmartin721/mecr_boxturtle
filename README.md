@@ -59,7 +59,7 @@ I found that sometimes it would use more memory than I had available, so if that
 ```cat commands.txt | parallel -j 8```
 
 This limits the number of parallel jobs to 8 at a time.  
-You can also try setting a memory usage limit, which won't start new jobs if memory is less than what you specify.  E.g.,  
+You can also try setting a memory usage limit, which won't start new jobs if available memory is less than what you specify.  E.g.,  
 
 ```cat commands.txt | parallel --memfree 3.0G --delay 30```
 
