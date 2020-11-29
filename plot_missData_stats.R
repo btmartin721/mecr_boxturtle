@@ -6,6 +6,7 @@ library("RColorBrewer")
 library("gridExtra")
 library("ggpubr")
 library("wesanderson")
+library("ggpmisc")
 
 plotUMLsummary <- function(runs, ind, pop, K){
   p <- ggplot(data = runs, aes(x = ind, y = pop, color = K)) + geom_line()
@@ -588,12 +589,12 @@ my_theme3 <- function(...){
   list(
     theme_bw() +
       theme(
-        axis.title = element_text(colour = "black", size = 22),
-        axis.text = element_text(colour = "black", size = 22),
+        axis.title = element_text(colour = "black", size = 24),
+        axis.text = element_text(colour = "black", size = 24),
         panel.grid = element_blank(), 
         strip.text = element_text(size=22, color = "black"),
-        legend.text = element_text(size=14, color = "black"),
-        legend.title = element_text(size=14, color = "black"),
+        legend.text = element_text(size=24, color = "black"),
+        legend.title = element_text(size=24, color = "black"),
         ...
       )
   )
@@ -611,34 +612,33 @@ my_theme4 <- function(...){
         legend.title = element_text(size=14, color = "black"),
         ...
       ) ,
-    scale_fill_brewer(
-      palette = "Set3",
-      name = "Clustering Alg. (MAF)",
-      labels = c(
-        "GS (0%)",
-        "H (0%)",
-        "PAM (0%)",
-        "GS (1%)",
-        "H (1%)",
-        "PAM (1%)",
-        "GS (3%)",
-        "H (3%)",
-        "PAM (3%)",
-        "GS (5%)",
-        "H (5%)",
-        "PAM (5%)"
-      )
-    )
+    scale_fill_manual(values=wes_palette(n=4, 
+                                         name="Royal1"), 
+                      name="Clust. Alg.",
+                      labels = c("DBSCAN", "GS", "HC", "PAM")
+                      )
   )
 }
 
 plot_grpbox <- function(df){
   
-  p.maf1 <-
-    ggplot(subset(df, method != "tsne"), 
-           aes(x = method, y = K, 
-               fill = interaction(clust, maf), 
-               group = runid)) +
+  mylabs <-
+    as_labeller(
+      c(`25` = "25",
+        `50` = "50",
+        `75` = "75",
+        `100` = "100"
+      )
+    )
+  
+  tmp <- subset(df, method != "tsne" & as.character(maf) == "0.0")
+  maxK <- max(tmp$K)
+  
+  p.maf0.0 <-
+    ggplot(subset(df, method != "tsne" & as.character(maf) == "0.0"), 
+           aes(x = factor(method), y = K, 
+               fill = factor(clust), 
+               group = factor(runid))) +
     geom_boxplot(
       outlier.size = NA,
       outlier.colour = NA,
@@ -646,13 +646,95 @@ plot_grpbox <- function(df){
       outlier.stroke = NA,
       outlier.alpha = NA,
       outlier.shape = NA,
-      notch = FALSE
+      notch = FALSE,
+      position = position_dodge2(preserve="single")
     ) +
-    facet_grid(forcats::fct_rev(factor(pop)) ~ factor(ind)) +
+    facet_grid(forcats::fct_rev(factor(pop)) ~ factor(ind),
+               labeller = mylabs) +
     my_theme4() +
     xlab("Dimension Reduction Method") +
     ylab(expression(italic("K"))) +
-    scale_y_continuous(breaks = c(2, 4, 6, 8, 10))
+    scale_y_continuous(breaks = seq(from = 2, to = maxK, by = 2)) +
+    scale_x_discrete(labels = c("cMDS", "isoMDS", "VAE"))
+  
+  tmp <- subset(df, method != "tsne" & as.character(maf) == "0.01")
+  maxK <- max(tmp$K)
+
+  p.maf0.1 <-
+    ggplot(subset(df, method != "tsne" & as.character(maf) == "0.01"), 
+           aes(x = factor(method), y = K, 
+               fill = factor(clust), 
+               group = factor(runid))) +
+    geom_boxplot(
+      outlier.size = NA,
+      outlier.colour = NA,
+      outlier.fill = NA,
+      outlier.stroke = NA,
+      outlier.alpha = NA,
+      outlier.shape = NA,
+      notch = FALSE,
+      position = position_dodge2(preserve="single")
+    ) +
+    facet_grid(forcats::fct_rev(factor(pop)) ~ factor(ind),
+               labeller = mylabs) +
+    my_theme4() +
+    xlab("Dimension Reduction Method") +
+    ylab(expression(italic("K"))) +
+    scale_y_continuous(breaks = seq(from = 2, to = maxK, by = 2)) +
+    scale_x_discrete(labels = c("cMDS", "isoMDS", "VAE"))
+  
+  tmp <- subset(df, method != "tsne" & as.character(maf) == "0.03")
+  maxK <- max(tmp$K)
+  
+  p.maf0.3 <-
+    ggplot(subset(df, method != "tsne" & as.character(maf) == "0.03"), 
+           aes(x = factor(method), y = K, 
+               fill = factor(clust), 
+               group = factor(runid))) +
+    geom_boxplot(
+      outlier.size = NA,
+      outlier.colour = NA,
+      outlier.fill = NA,
+      outlier.stroke = NA,
+      outlier.alpha = NA,
+      outlier.shape = NA,
+      notch = FALSE,
+      position = position_dodge2(preserve="single")
+    ) +
+    facet_grid(forcats::fct_rev(factor(pop)) ~ factor(ind),
+               labeller = mylabs) +
+    my_theme4() +
+    xlab("Dimension Reduction Method") +
+    ylab(expression(italic("K"))) +
+    scale_y_continuous(breaks = seq(from = 2, to = maxK, by = 2)) +
+    scale_x_discrete(labels = c("cMDS", "isoMDS", "VAE"))
+  
+  tmp <- subset(df, method != "tsne" & as.character(maf) == "0.05")
+  maxK <- max(tmp$K)
+  
+  p.maf0.5 <-
+    ggplot(subset(df, method != "tsne" & as.character(maf) == "0.05"), 
+           aes(x = factor(method), y = K, 
+               fill = factor(clust),
+               group = factor(runid))) +
+    geom_boxplot(
+      outlier.size = NA,
+      outlier.colour = NA,
+      outlier.fill = NA,
+      outlier.stroke = NA,
+      outlier.alpha = NA,
+      outlier.shape = NA,
+      notch = FALSE,
+      position = position_dodge2(preserve="single")
+    ) +
+    facet_grid(forcats::fct_rev(factor(pop)) ~ factor(ind),
+               labeller = mylabs) +
+    my_theme4() +
+    xlab("Dimension Reduction Method") +
+    ylab(expression(italic("K"))) +
+    scale_y_continuous(breaks = seq(from = 2, to = maxK, by = 2)) +
+    scale_x_discrete(labels = c("cMDS", "isoMDS", "VAE"))
+  
   
   p.maf2 <-
     ggplot(subset(df, method == "tsne"),
@@ -677,19 +759,238 @@ plot_grpbox <- function(df){
     scale_x_discrete(labels = c("", "10", "", "20", "", "30", "", "40", "", "50"))
   
   gc()
-  return(list(p.maf1, p.maf2))
+  return(list(p.maf0.0, p.maf0.1, p.maf0.3, p.maf0.5, p.maf2))
 }
 
 myp <- plot_grpbox(mymelt)
 
-ggsave(filename = "missDataRuns/plots_maf_final/boxplots_maf.png", myp[[1]], device="png", width = 11, height = 7, units = "in", dpi=300)
+ggsave(filename = "missDataRuns/plots_maf_final2/boxplots_maf0.0.pdf", myp[[1]], device="pdf", width = 11, height = 7, units = "in", dpi=300)
 
-ggsave(filename = "missDataRuns/plots_maf_final/boxplots_perp_maf.png", myp[[2]], device="png", width = 16, height = 9, units = "in", dpi=300)
+ggsave(filename = "missDataRuns/plots_maf_final2/boxplots_maf0.01.pdf", myp[[2]], device="pdf", width = 11, height = 7, units = "in", dpi=300)
 
-ggsave(filename = "missDataRuns/plots_maf_final/boxplots_maf.pdf", myp[[1]], device="pdf", width = 11, height = 7, units = "in", dpi=300)
+ggsave(filename = "missDataRuns/plots_maf_final2/boxplots_maf0.03.pdf", myp[[3]], device="pdf", width = 11, height = 7, units = "in", dpi=300)
 
-ggsave(filename = "missDataRuns/plots_maf_final/boxplots_perp_maf.pdf", myp[[2]], device="pdf", width = 16, height = 9, units = "in", dpi=300)
+ggsave(filename = "missDataRuns/plots_maf_final2/boxplots_maf0.05.pdf", myp[[4]], device="pdf", width = 11, height = 7, units = "in", dpi=300)
 
+ggsave(filename = "missDataRuns/plots_maf_final2/boxplots_perp_maf.pdf", myp[[5]], device="pdf", width = 16, height = 9, units = "in", dpi=300)
 
+plot_corr <- function(df){
+  
+  df$pop <- factor(df$pop, levels = c("100", "75", "50", "25"))
 
+    label_names <-
+    as_labeller(c(
+      `0.0` = "0%",
+      `0.01` = "1%",
+      `0.03` = "3%",
+      `0.05` = "5%",
+      `25` = "25",
+      `50` = "50",
+      `75` = "75",
+      `100` = "100"
+    ))
+    
+    label_names2 <- as_labeller(c(
+      `25` = "25",
+      `50` = "50",
+      `75` = "75",
+      `100` = "100"
+    ))
+  
+  my.formula <- y ~ x
+  p1 <-
+    ggplot(df,
+           aes(x = ind, y = meanK,
+               color = method)) +
+    geom_smooth(se = FALSE, method = "lm") +
+    my_theme3() +
+    facet_grid(pop ~ factor(maf), labeller = label_names) +
+    xlab("Per-individual Filtering (%)") +
+    ylab(expression(italic("K"))) +
+    scale_y_continuous(breaks = c(2, 4, 6, 8)) +
+    scale_color_brewer(palette = "Set1", name = "Method") +
+    scale_x_continuous(breaks = c(25, 50, 75, 100),
+                       labels = c("25", "", "75", "")) +
+    ggpmisc::stat_poly_eq(
+      formula = my.formula,
+      aes(label = ..rr.label..),
+      parse = TRUE,
+      label.x = "right",
+      vstep = 0.075,
+      label.y = "bottom"
+    )
+
+  p2 <-
+    ggplot(subset(df, clust != "DBSCAN"),
+           aes(x = ind, y = meanK,
+               color = factor(clust))) +
+    geom_smooth(se = FALSE, method = "lm") +
+    my_theme3() +
+    facet_grid(pop ~ factor(maf), labeller = label_names) +
+    xlab("Per-individual Filtering (%)") +
+    ylab(expression(italic("K"))) +
+    scale_y_continuous(breaks = c(2, 4, 6, 8)) +
+    scale_color_brewer(palette = "Set1", name = "Clust.") +
+    scale_x_continuous(breaks = c(25, 50, 75, 100),
+                       labels = c("25", "", "75", "")) +
+    ggpmisc::stat_poly_eq(
+      formula = my.formula,
+      aes(label = ..rr.label..),
+      parse = TRUE,
+      label.x = "right",
+      vstep = 0.075,
+      label.y = "bottom"
+    )
+  
+  p3 <-
+    ggplot(subset(df, df$method == "tsne" & as.character(df$maf) == "0.0"),
+           aes(x = perp, y = meanK,
+               color = factor(clust))) +
+    geom_smooth(se = FALSE, method = "lm") +
+    my_theme3() +
+    facet_grid(pop ~ factor(ind), labeller = label_names2) +
+    xlab("t-SNE Perplexity") +
+    ylab(expression(italic("K"))) +
+    scale_y_continuous(breaks = c(2, 4, 6, 8)) +
+    scale_color_brewer(palette = "Set1", name = "Clust.") +
+    scale_x_continuous(breaks = c(25, 50),
+                       labels = c("25", "50")) +
+    ggpmisc::stat_poly_eq(
+      formula = my.formula,
+      aes(label = ..rr.label..),
+      parse = TRUE,
+      label.x = "right",
+      vstep = 0.075,
+      label.y = "bottom"
+    )
+  
+  p4 <-
+    ggplot(subset(df, df$method == "tsne" & as.character(df$maf) == "0.01"),
+           aes(x = perp, y = meanK,
+               color = factor(clust))) +
+    geom_smooth(se = FALSE, method = "lm") +
+    my_theme3() +
+    facet_grid(pop ~ factor(ind), labeller = label_names2) +
+    xlab("t-SNE Perplexity") +
+    ylab(expression(italic("K"))) +
+    scale_y_continuous(breaks = c(2, 4, 6, 8)) +
+    scale_color_brewer(palette = "Set1", name = "Clust.") +
+    scale_x_continuous(breaks = c(25, 50),
+                       labels = c("25", "50")) +
+    ggpmisc::stat_poly_eq(
+      formula = my.formula,
+      aes(label = ..rr.label..),
+      parse = TRUE,
+      label.x = "right",
+      vstep = 0.075,
+      label.y = "bottom"
+    )
+  
+  p5 <-
+    ggplot(subset(df, df$method == "tsne" & as.character(df$maf) == "0.03"),
+           aes(x = perp, y = meanK,
+               color = factor(clust))) +
+    geom_smooth(se = FALSE, method = "lm") +
+    my_theme3() +
+    facet_grid(pop ~ factor(ind), labeller = label_names2) +
+    xlab("t-SNE Perplexity") +
+    ylab(expression(italic("K"))) +
+    scale_y_continuous(breaks = c(2, 4, 6, 8)) +
+    scale_color_brewer(palette = "Set1", name = "Clust.") +
+    scale_x_continuous(breaks = c(25, 50),
+                       labels = c("25", "50")) +
+    ggpmisc::stat_poly_eq(
+      formula = my.formula,
+      aes(label = ..rr.label..),
+      parse = TRUE,
+      label.x = "right",
+      vstep = 0.075,
+      label.y = "bottom"
+    )
+  
+  p6 <-
+    ggplot(subset(df, df$method == "tsne" & as.character(df$maf) == "0.05"),
+           aes(x = perp, y = meanK,
+               color = factor(clust))) +
+    geom_smooth(se = FALSE, method = "lm") +
+    my_theme3() +
+    facet_grid(pop ~ factor(ind), labeller = label_names2) +
+    xlab("t-SNE Perplexity") +
+    ylab(expression(italic("K"))) +
+    scale_y_continuous(breaks = c(2, 4, 6, 8)) +
+    scale_color_brewer(palette = "Set1", name = "Clust.") +
+    scale_x_continuous(breaks = c(25, 50),
+                       labels = c("25", "50")) +
+    ggpmisc::stat_poly_eq(
+      formula = my.formula,
+      aes(label = ..rr.label..),
+      parse = TRUE,
+      label.x = "right",
+      vstep = 0.075,
+      label.y = "bottom"
+    )
+  
+  ggsave(
+    filename = "missDataRuns/plots_maf_final2/corrPlot_method.pdf",
+    p1,
+    device = "pdf",
+    width = 10,
+    height = 12,
+    units = "in",
+    dpi = 300
+  )
+  
+  ggsave(
+    filename = "missDataRuns/plots_maf_final2/corrPlot_clust.pdf",
+    p2,
+    device = "pdf",
+    width = 10,
+    height = 12,
+    units = "in",
+    dpi = 300
+  )
+  
+  ggsave(
+    filename = "missDataRuns/plots_maf_final2/corrPlot_tsnePerp_maf0.0.pdf",
+    p3,
+    device = "pdf",
+    width = 10,
+    height = 12,
+    units = "in",
+    dpi = 300
+  )
+  
+  ggsave(
+    filename = "missDataRuns/plots_maf_final2/corrPlot_tsnePerp_maf0.01.pdf",
+    p4,
+    device = "pdf",
+    width = 10,
+    height = 12,
+    units = "in",
+    dpi = 300
+  )
+  
+  ggsave(
+    filename = "missDataRuns/plots_maf_final2/corrPlot_tsnePerp_maf0.03.pdf",
+    p5,
+    device = "pdf",
+    width = 10,
+    height = 12,
+    units = "in",
+    dpi = 300
+  )
+  
+  ggsave(
+    filename = "missDataRuns/plots_maf_final2/corrPlot_tsnePerp_maf0.05.pdf",
+    p6,
+    device = "pdf",
+    width = 10,
+    height = 12,
+    units = "in",
+    dpi = 300
+  )
+  
+}
+
+plot_corr(hm_data)
 
