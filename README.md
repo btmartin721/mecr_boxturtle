@@ -146,6 +146,3 @@ You'll have to tweak the code, as we don't have it automated. Currently, it is t
 It's also set up to read a nexus file output from LSD2 divergence dating, as implemented in IQ-TREE.   
 
 Well, that's all our scripts :)
-
-Thanks for watching Ryan's Toy Review! Don't forget to subscribe!
-
