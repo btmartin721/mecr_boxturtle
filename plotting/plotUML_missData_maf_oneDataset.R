@@ -445,6 +445,7 @@ plotDIR <- "plots_maf/"
 dir.create(plotDIR, 
            showWarnings = FALSE)
 
+# Define color palette with 25 colors.
 c25 <- c(
   "dodgerblue2", "#E31A1C", # red
   "green4",
