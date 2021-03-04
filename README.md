@@ -92,7 +92,9 @@ The output for all the cMDS, isoMDS, and t-SNE replicates across all algorithms 
 You can run the *parsing_output/bash/copy_uml_output.sh* script to neatly organize the output files.
 This will move with the replicates for each algorithm into their own directories.  
 
-Once all the output is moved, use the *parsing_output/bash/clean_uml_output.sh* script to fix some inconsistencies in file formats and add switch the 
+Once all the output is moved, use the *parsing_output/bash/clean_uml_output.sh* script to fix some inconsistencies in file formats.
+
+Alternatively, if you just want to run a single dataset, you can use the *parsing_output/bash/copy_uml_output_oneDataset.sh* and *parsing_output/bash/clean_uml_output_oneDataset.sh* scripts.  
 
 ### VAE
 
@@ -106,15 +108,32 @@ The standard deviation (SD) latent variable is averaged across all replicates, a
 Use the add_sampleids.sh script to switch the first column in each replicate with sampleIDs.  
 This makes for easier plotting later.  
 
+If you are just running one dataset, use the *add_sampleids_oneDataset.sh* script instead.  
+
 ## Parsing UML Output
 
 5. Run the *parsing_output/aligningK/UML_alignK_missDataRuns_maf.R* script to align K across replicates. 
+
+Use the *parsing_output/aligningK/UML_alignK_missDataRuns_maf_oneDataset.R* script if you are only running a single dataset.  
 
 First, you need to align K across replicates. We implemented the CLUMPAK algorithm (Kopelman et al. 2015) using the PopHelper R package (Francis 2017).
 
 To use this script, replicates for a single algorithm should be in its own directory, **with nothing else in it**.  E.g. if you did 100 cMDS gapstat replicates, there should be 100 files in the *cmds/gapstat* directory.  
 
-The script loads the replicates into a single data.frame, aligns K for each clustering algorithm, 
+You also need a tab-separated file with sample ids and line numbers like below:
+
+```
+sample1 1
+sample2 2
+sample3 3
+sample4 4
+sample5 5
+...
+```
+
+This ensures the same order for all datasets, particularly if you have 
+
+The alignK script loads the replicates into a single data.frame, aligns K for each clustering algorithm, 
 and saves RDS objects for each algorithm so they can be loaded in downstream R scripts. 
 
 The .rds objects are lists of data.frames, with the first data.frame being the K-aligned replicates as columns and the second beign assignment proportions.  
@@ -136,6 +155,8 @@ You will have to tweak the code in this one. It isn't full automated.
 Here, you can make structure-style barplots with assignment proportions among the UML replicates.
 It saves one barplot per clustering algorithm and puts them all in one PDF file. 
 If you ran multiple filtering parameters you can run them all in the for loop.  
+
+Use the *plotting/plotUML_missData_maf_oneDataset.R* script if you are only using a single dataset.  
 
 8. Run *plotting/plotDatedTree.R* to add a phylogeny to the structure-style barplots. 
 
