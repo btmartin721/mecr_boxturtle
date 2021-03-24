@@ -5,6 +5,7 @@ library(reshape2)
 library(tidyr)
 library(combinat)
 library(stringr)
+library(beepr)
 
 # Suppress summarise info
 options(dplyr.summarise.inform = FALSE)
@@ -254,279 +255,463 @@ align_uml_exhaustive <- function(rundir,
   
 }
 
+run_alignK_oneVal <- function(rundir,
+                              RobjDIR,
+                              plotDIR,
+                              i,
+                              j,
+                              m,
+                              p,
+                              exhaustive = FALSE) {
+  dir.create(plotDIR, showWarnings = FALSE)
+  dir.create(RobjDIR, showWarnings = FALSE)
+  
+  if (!exhaustive) {
+    writeLines(paste0("\nDoing missInd ",
+                      i,
+                      " Pop ",
+                      j,
+                      " MAF ",
+                      m,
+                      "...\n"))
+    
+    writeLines("Doing cmds gapstat...")
+    
+    cmds_gapstat <-
+      align_uml_heuristic(
+        rundir = paste0(rundir,
+                        "/cmds/gapstat/"),
+        method = "cmds",
+        alg = "gapstat",
+        plotDIR = plotDIR
+      )
+    
+    saveRDS(object = cmds_gapstat,
+            file = file.path(RobjDIR, "cmds_gapstat.rds"))
+    
+    writeLines("Done!\n")
+    
+    writeLines("Doing cmds Hierarchical...")
+    
+    cmds_hier <-
+      align_uml_heuristic(
+        rundir = paste0(rundir,
+                        "/cmds/hierarchical/"),
+        method = "cmds",
+        alg = "hier",
+        plotDIR = plotDIR
+      )
+    
+    saveRDS(object = cmds_hier,
+            file = file.path(RobjDIR, "cmds_hier.rds"))
+    
+    writeLines("Done with cmds hier!\n")
+    
+    writeLines("Doing cmds pam (cmds groups)...")
+    
+    cmds_pam <-
+      align_uml_heuristic(
+        rundir = paste0(rundir,
+                        "/cmds/pam/cmds_groups/"),
+        method = "cmds",
+        alg = "pam",
+        plotDIR = plotDIR
+      )
+    
+    saveRDS(object = cmds_pam,
+            file = file.path(RobjDIR, "cmds_pam.rds"))
+    
+    writeLines("Done with cmds pam (cmds groups!\n")
+    
+    writeLines("Doing cmds PAM (proximity scores...")
+    
+    cmds_pam_prox <-
+      align_uml_heuristic(
+        rundir = paste0(rundir,
+                        "/cmds/pam/prox/"),
+        method = "cmds",
+        alg = "pam_prox",
+        plotDIR = plotDIR
+      )
+    
+    saveRDS(object = cmds_pam_prox,
+            file = file.path(RobjDIR, "cmds_pam_prox.rds"))
+    
+    writeLines("Done with cmds PAM (Proximity scores)!\n")
+    
+    writeLines("Doing isomds gapstat...")
+    
+    isomds_gapstat <-
+      align_uml_heuristic(
+        rundir = paste0(rundir,
+                        "/isomds/gapstat/"),
+        method = "isomds",
+        alg = "gapstat",
+        plotDIR = plotDIR
+      )
+    
+    saveRDS(object = isomds_gapstat,
+            file = file.path(RobjDIR, "isomds_gapstat.rds"))
+    
+    writeLines("Done with isomds gapstat!\n")
+    
+    writeLines("Doing isomds hierarchical...")
+    
+    isomds_hier <-
+      align_uml_heuristic(
+        rundir = paste0(rundir,
+                        "/isomds/hierarchical/"),
+        method = "isomds",
+        alg = "hier",
+        plotDIR = plotDIR
+      )
+    
+    saveRDS(object = isomds_hier,
+            file = file.path(RobjDIR, "isomds_hier.rds"))
+    
+    writeLines("Done with isomds hierarchical!\n")
+    
+    writeLines("Doing isomds PAM...")
+    
+    isomds_pam <-
+      align_uml_heuristic(
+        rundir = paste0(rundir,
+                        "/isomds/pam/"),
+        method = "isomds",
+        alg = "pam",
+        plotDIR = plotDIR
+      )
+    
+    saveRDS(object = isomds_pam,
+            file = file.path(RobjDIR, "isomds_pam.rds"))
+    
+    writeLines("Done with isomds PAM!\n")
+    
+    
+    ###################################################
+    ###################################################
+    ## t-SNE
+    ###################################################
+    ###################################################
+    
+    writeLines(paste0("Doing tsne missInd",
+                      i,
+                      " Pop",
+                      j,
+                      "_maf",
+                      m,
+                      " P",
+                      p,
+                      "...\n"))
+    
+    writeLines("Doing tsne gapstat...\n")
+    
+    tsne_gapstat <-
+      align_uml_heuristic(
+        rundir = paste0(rundir,
+                        "/tsne/gapstat/p",
+                        p,
+                        "/"),
+        method = paste0("tsneP", p),
+        alg = "gapstat",
+        plotDIR = plotDIR
+      )
+    
+    saveRDS(object = tsne_gapstat,
+            file = file.path(RobjDIR, paste0("tsne_gapstat",
+                                             "_P",
+                                             p,
+                                             ".rds")))
+    
+    writeLines("Doing tsne hierarchical...\n")
+    
+    tsne_hier <-
+      align_uml_heuristic(
+        rundir = paste0(rundir,
+                        "/tsne/hierarchical/p",
+                        p,
+                        "/"),
+        method = paste0("tsneP", p),
+        alg = "hier",
+        plotDIR = plotDIR
+      )
+    
+    saveRDS(object = tsne_hier,
+            file = file.path(RobjDIR, paste0("tsne_hier",
+                                    "_P",
+                                    p,
+                                    ".rds")))
+    
+    writeLines("Doing tsne PAM...\n")
+    
+    tsne_pam <-
+      align_uml_heuristic(
+        rundir = paste0(rundir,
+                        "/tsne/pam/p",
+                        p,
+                        "/"),
+        method = paste0("tsneP", p),
+        alg = "pam",
+        plotDIR = plotDIR
+      )
+    
+    saveRDS(object = tsne_pam,
+            file = file.path(RobjDIR, paste0("tsne_pam",
+                                    "_P",
+                                    p,
+                                    ".rds")))
+    
+    writeLines(paste0("Done with tsne",
+                      i,
+                      " Pop",
+                      j, "_maf", m,
+                      " P",
+                      p,
+                      "!\n"))
+    
+    vae <- align_uml_heuristic(
+      rundir = paste0(rundir,
+                      "/vae/"),
+      method = "vae",
+      alg = "DBSCAN",
+      plotDIR = plotDIR
+    )
+    
+    saveRDS(object = vae,
+            file = file.path(RobjDIR, "vae.rds"))
+    
+    beep(3)
+    
+  } else {
+    writeLines(paste0("\nDoing missInd ",
+                      i,
+                      " Pop ",
+                      j,
+                      " MAF ",
+                      m,
+                      "...\n"))
+    
+    writeLines("Doing cmds gapstat...")
+    
+    cmds_gapstat <-
+      align_uml_exhaustive(
+        rundir = paste0(rundir,
+                        "/cmds/gapstat/"),
+        method = "cmds",
+        alg = "gapstat",
+        plotDIR = plotDIR
+      )
+    
+    saveRDS(object = cmds_gapstat,
+            file = file.path(RobjDIR, "cmds_gapstat.rds"))
+    
+    writeLines("Done!\n")
+    
+    writeLines("Doing cmds Hierarchical...")
+    
+    cmds_hier <-
+      align_uml_exhaustive(
+        rundir = paste0(rundir,
+                        "/cmds/hierarchical/"),
+        method = "cmds",
+        alg = "hier",
+        plotDIR = plotDIR
+      )
+    
+    saveRDS(object = cmds_hier,
+            file = file.path(RobjDIR, "cmds_hier.rds"))
+    
+    writeLines("Done with cmds hier!\n")
+    
+    writeLines("Doing cmds pam (cmds groups)...")
+    
+    cmds_pam <-
+      align_uml_exhaustive(
+        rundir = paste0(rundir,
+                        "/cmds/pam/cmds_groups/"),
+        method = "cmds",
+        alg = "pam",
+        plotDIR = plotDIR
+      )
+    
+    saveRDS(object = cmds_pam,
+            file = file.path(RobjDIR, "cmds_pam.rds"))
+    
+    writeLines("Done with cmds pam (cmds groups!\n")
+    
+    writeLines("Doing cmds PAM (proximity scores...")
+    
+    cmds_pam_prox <-
+      align_uml_exhaustive(
+        rundir = paste0(rundir,
+                        "/cmds/pam/prox/"),
+        method = "cmds",
+        alg = "pam_prox",
+        plotDIR = plotDIR
+      )
+    
+    saveRDS(object = cmds_pam_prox,
+            file = file.path(RobjDIR, "cmds_pam_prox.rds"))
+    
+    writeLines("Done with cmds PAM (Proximity scores)!\n")
+    
+    writeLines("Doing isomds gapstat...")
+    
+    isomds_gapstat <-
+      align_uml_exhaustive(
+        rundir = paste0(rundir,
+                        "/isomds/gapstat/"),
+        method = "isomds",
+        alg = "gapstat",
+        plotDIR = plotDIR
+      )
+    
+    saveRDS(object = isomds_gapstat,
+            file = file.path(RobjDIR, "isomds_gapstat.rds"))
+    
+    writeLines("Done with isomds gapstat!\n")
+    
+    writeLines("Doing isomds hierarchical...")
+    
+    isomds_hier <-
+      align_uml_exhaustive(
+        rundir = paste0(rundir,
+                        "/isomds/hierarchical/"),
+        method = "isomds",
+        alg = "hier",
+        plotDIR = plotDIR
+      )
+    
+    saveRDS(object = isomds_hier,
+            file = file.path(RobjDIR, "isomds_hier.rds"))
+    
+    writeLines("Done with isomds hierarchical!\n")
+    
+    writeLines("Doing isomds PAM...")
+    
+    isomds_pam <-
+      align_uml_exhaustive(
+        rundir = paste0(rundir,
+                        "/isomds/pam/"),
+        method = "isomds",
+        alg = "pam",
+        plotDIR = plotDIR
+      )
+    
+    saveRDS(object = isomds_pam,
+            file = file.path(RobjDIR, "isomds_pam.rds"))
+    
+    writeLines("Done with isomds PAM!\n")
+    
+    
+    ###################################################
+    ###################################################
+    ## t-SNE
+    ###################################################
+    ###################################################
+    
+    writeLines(paste0("Doing tsne missInd",
+                      i,
+                      " Pop",
+                      j,
+                      "_maf",
+                      m,
+                      " P",
+                      p,
+                      "...\n"))
+    
+    writeLines("Doing tsne gapstat...\n")
+    
+    tsne_gapstat <-
+      align_uml_exhaustive(
+        rundir = paste0(rundir,
+                        "/tsne/gapstat/p",
+                        p,
+                        "/"),
+        method = paste0("tsneP", p),
+        alg = "gapstat",
+        plotDIR = plotDIR
+      )
+    
+    saveRDS(object = tsne_gapstat,
+            file = file.path(
+              RobjDIR, paste0("tsne_gapstat",
+              "_P",
+              p,
+              ".rds"
+            )))
+    
+    writeLines("Doing tsne hierarchical...\n")
+    
+    tsne_hier <-
+      align_uml_exhaustive(
+        rundir = paste0(rundir,
+                        "/tsne/hierarchical/p",
+                        p,
+                        "/"),
+        method = paste0("tsneP", p),
+        alg = "hier",
+        plotDIR = plotDIR
+      )
+    
+    saveRDS(object = tsne_hier,
+            file = file.path(RobjDIR, paste0("tsne_hier",
+                                    "_P",
+                                    p,
+                                    ".rds")))
+    
+    writeLines("Doing tsne PAM...\n")
+    
+    tsne_pam <-
+      align_uml_exhaustive(
+        rundir = paste0(rundir,
+                        "/tsne/pam/p",
+                        p,
+                        "/"),
+        method = paste0("tsneP", p),
+        alg = "pam",
+        plotDIR = plotDIR
+      )
+    
+    saveRDS(object = tsne_pam,
+            file = file.path(RobjDIR, paste0("tsne_pam",
+                                    "_P",
+                                    p,
+                                    ".rds")))
+    
+    writeLines(paste0("Done with tsne",
+                      i,
+                      " Pop",
+                      j, "_maf", m,
+                      " P",
+                      p,
+                      "!\n"))
+    
+    vae <- align_uml_exhaustive(
+      rundir = paste0(rundir,
+                      "/vae/"),
+      method = "vae",
+      alg = "DBSCAN",
+      plotDIR = plotDIR
+    )
+    
+    saveRDS(object = vae,
+            file = file.path(RobjDIR, "vae.rds"))
+    
+    beep(3)
+    
+  }
+}
+
+options(error = function(){beep(9)})
+
 rundir <- "parsedoutput_rf_maf05"
-
-dir.create("plots_maf", showWarnings = FALSE)
-dir.create("Robjects_maf", showWarnings = FALSE)
-
-plotDIR <- "plots_maf"
+RobjDIR <- "Robjects_maf_exhaustive"
+plotDIR <- "plots_maf_exhaustive"
 
 i <- 50
 j <- 25
 m <- 0.05
 p <- 15
 
-writeLines(paste0("\nDoing missInd ",
-                  i,
-                  " Pop ",
-                  j,
-                  " MAF ",
-                  m,
-                  "...\n"))
-
-writeLines("Doing cmds gapstat...")
-
-cmds_gapstat <-
-  align_uml_heuristic(
-    rundir = paste0(
-      rundir,
-      "/cmds/gapstat/"
-    ),
-    method = "cmds",
-    alg = "gapstat",
-    plotDIR = plotDIR
-  )
-
-saveRDS(
-  object = cmds_gapstat,
-  file = "Robjects_maf/cmds_gapstat.rds"
-)
-
-writeLines("Done!\n")
-
-writeLines("Doing cmds Hierarchical...")
-
-cmds_hier <-
-  align_uml_heuristic(
-    rundir = paste0(
-      rundir,
-      "/cmds/hierarchical/"
-    ),
-    method = "cmds",
-    alg = "hier",
-    plotDIR = plotDIR
-  )
-
-saveRDS(
-  object = cmds_hier,
-  file = "Robjects_maf/cmds_hier.rds"
-)
-
-writeLines("Done with cmds hier!\n")
-
-writeLines("Doing cmds pam (cmds groups)...")
-
-cmds_pam <-
-  align_uml_heuristic(
-    rundir = paste0(
-      rundir,
-      "/cmds/pam/cmds_groups/"
-    ),
-    method = "cmds",
-    alg = "pam",
-    plotDIR = plotDIR
-  )
-
-saveRDS(
-  object = cmds_pam,
-  file = "Robjects_maf/cmds_pam.rds",
-)
-
-writeLines("Done with cmds pam (cmds groups!\n")
-
-writeLines("Doing cmds PAM (proximity scores...")
-
-cmds_pam_prox <-
-  align_uml_heuristic(
-    rundir = paste0(
-      rundir,
-      "/cmds/pam/prox/"
-    ),
-    method = "cmds",
-    alg = "pam_prox",
-    plotDIR = plotDIR
-  )
-
-saveRDS(
-  object = cmds_pam_prox,
-  file = "Robjects_maf/cmds_pam_prox.rds",
-)
-
-writeLines("Done with cmds PAM (Proximity scores)!\n")
-
-writeLines("Doing isomds gapstat...")
-
-isomds_gapstat <-
-  align_uml_heuristic(
-    rundir = paste0(
-      rundir,
-      "/isomds/gapstat/"
-    ),
-    method = "isomds",
-    alg = "gapstat",
-    plotDIR = plotDIR
-  )
-
-saveRDS(
-  object = isomds_gapstat,
-  file = "Robjects_maf/isomds_gapstat.rds"
-)
-
-writeLines("Done with isomds gapstat!\n")
-
-writeLines("Doing isomds hierarchical...")
-
-isomds_hier <-
-  align_uml_heuristic(
-    rundir = paste0(
-      rundir,
-      "/isomds/hierarchical/"
-    ),
-    method = "isomds",
-    alg = "hier",
-    plotDIR = plotDIR
-  )
-
-saveRDS(
-  object = isomds_hier,
-  file = "Robjects_maf/isomds_hier.rds"
-)
-
-writeLines("Done with isomds hierarchical!\n")
-
-writeLines("Doing isomds PAM...")
-
-isomds_pam <-
-  align_uml_heuristic(
-    rundir = paste0(
-      rundir,
-      "/isomds/pam/"
-    ),
-    method = "isomds",
-    alg = "pam",
-    plotDIR = plotDIR
-  )
-
-saveRDS(
-  object = isomds_pam,
-  file = "Robjects_maf/isomds_pam.rds"
-)
-
-writeLines("Done with isomds PAM!\n")
-
-
-###################################################
-###################################################
-## t-SNE
-###################################################
-###################################################
-
-writeLines(paste0("Doing tsne missInd",
-                  i,
-                  " Pop",
-                  j,
-                  "_maf",
-                  m,
-                  " P",
-                  p,
-                  "...\n"))
-
-writeLines("Doing tsne gapstat...\n")
-
-tsne_gapstat <-
-  align_uml_heuristic(
-    rundir = paste0(
-      rundir,
-      "/tsne/gapstat/p",
-      p,
-      "/"
-    ),
-    method = paste0("tsneP", p),
-    alg = "gapstat",
-    plotDIR = plotDIR
-  )
-
-saveRDS(
-  object = tsne_gapstat,
-  file = paste0(
-    "Robjects_maf/tsne_gapstat",
-    "_P",
-    p,
-    ".rds"
-  )
-)
-
-writeLines("Doing tsne hierarchical...\n")
-
-tsne_hier <-
-  align_uml_heuristic(
-    rundir = paste0(
-      rundir,
-      "/tsne/hierarchical/p",
-      p,
-      "/"
-    ),
-    method = paste0("tsneP", p),
-    alg = "hier",
-    plotDIR = plotDIR
-  )
-
-saveRDS(
-  object = tsne_hier,
-  file = paste0(
-    "Robjects_maf/tsne_hier",
-    "_P",
-    p,
-    ".rds"
-  )
-)
-
-writeLines("Doing tsne PAM...\n")
-
-tsne_pam <-
-  align_uml_heuristic(
-    rundir = paste0(
-      rundir,
-      "/tsne/pam/p",
-      p,
-      "/"
-    ),
-    method = paste0("tsneP", p),
-    alg = "pam",
-    plotDIR = plotDIR
-  )
-
-saveRDS(
-  object = tsne_pam,
-  file = paste0(
-    "Robjects_maf/tsne_pam",
-    "_P",
-    p,
-    ".rds"
-  )
-)
-
-writeLines(paste0("Done with tsne",
-                  i,
-                  " Pop",
-                  j, "_maf", m,
-                  " P",
-                  p,
-                  "!\n"))
-
-vae <- align_uml_heuristic(
-  rundir = paste0(
-    rundir,
-    "/vae/"
-  ),
-  method = "vae",
-  alg = "DBSCAN",
-  plotDIR = plotDIR
-)
-
-saveRDS(
-  object = vae,
-  file = "Robjects_maf/vae.rds"
-)
-
-beepr::beep(3)
+run_alignK_oneVal(rundir, RobjDIR, plotDIR, i, j, m, p, exhaustive = TRUE)
